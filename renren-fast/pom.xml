@@ -52,6 +52,11 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>com.atguigu.gulimall</groupId>
+			<artifactId>gulimall-common</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
@@ -86,12 +91,6 @@
 			<groupId>com.baomidou</groupId>
 			<artifactId>mybatis-plus-boot-starter</artifactId>
 			<version>${mybatisplus.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>com.baomidou</groupId>
-					<artifactId>mybatis-plus-generator</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>mysql</groupId>

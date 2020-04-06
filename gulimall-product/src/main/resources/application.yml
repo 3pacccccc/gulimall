@@ -1,19 +1,23 @@
 spring:
-  cloud:
-    nacos:
-      discovery:
-        server-addr: 49.234.18.154:8848
-  application:
-    name: gulimall-product
   datasource:
     username: xiaoma
     password: 555dedd+5
     url: jdbc:mysql://49.234.18.154:3306/gulimall_pms?characterEncoding=UTF-8
     driver-class-name: com.mysql.cj.jdbc.Driver
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 49.234.18.154:8848
 mybatis-plus:
-  mapper-locations: classpath*:/mapper/**/*.xml  # classpath*表示其他项目下的classpath也一起扫描， 不带*表示只扫描自己的classpath
+  mapper-locations: classpath:/mapper/**/*.xml
   global-config:
     db-config:
       id-type: auto
+      logic-delete-value: 1
+      logic-not-delete-value: 0
 server:
   port: 10000
+logging:
+  level:
+    com.atguigu.gulimall: debug
+
