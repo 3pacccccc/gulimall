@@ -64,5 +64,6 @@ public class CategoryEntity implements Serializable {
 	private Integer productCount;
 
     @TableField(exist = false)
+	@JsonInclude(JsonInclude.Include.NON_EMPTY)
 	private List<CategoryEntity> children;
 }
