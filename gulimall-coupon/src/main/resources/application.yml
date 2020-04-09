@@ -1,4 +1,3 @@
-
 spring:
   datasource:
     username: xiaoma
@@ -12,7 +11,7 @@ spring:
   application:
     name: gulimall-coupon
 mybatis-plus:
-  mapper-locations: classpath*:/mapper/**/*.xml  # classpath*表示其他项目下的classpath也一起扫描， 不带*表示只扫描自己的classpath
+  mapper-locations: classpath*:/mapper/**/*.xml
   global-config:
     db-config:
       id-type: auto
