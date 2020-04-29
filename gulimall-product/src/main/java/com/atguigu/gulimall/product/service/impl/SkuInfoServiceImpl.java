@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 
@@ -44,38 +45,38 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
          * max: 0
          */
         String key = (String) params.get("key");
-        if(!StringUtils.isEmpty(key)){
-            queryWrapper.and((wrapper)->{
-                wrapper.eq("sku_id",key).or().like("sku_name",key);
+        if (!StringUtils.isEmpty(key)) {
+            queryWrapper.and((wrapper) -> {
+                wrapper.eq("sku_id", key).or().like("sku_name", key);
             });
         }
 
         String catelogId = (String) params.get("catelogId");
-        if(!StringUtils.isEmpty(catelogId)&&!"0".equalsIgnoreCase(catelogId)){
+        if (!StringUtils.isEmpty(catelogId) && !"0".equalsIgnoreCase(catelogId)) {
 
-            queryWrapper.eq("catalog_id",catelogId);
+            queryWrapper.eq("catalog_id", catelogId);
         }
 
         String brandId = (String) params.get("brandId");
-        if(!StringUtils.isEmpty(brandId)&&!"0".equalsIgnoreCase(catelogId)){
-            queryWrapper.eq("brand_id",brandId);
+        if (!StringUtils.isEmpty(brandId) && !"0".equalsIgnoreCase(catelogId)) {
+            queryWrapper.eq("brand_id", brandId);
         }
 
         String min = (String) params.get("min");
-        if(!StringUtils.isEmpty(min)){
-            queryWrapper.ge("price",min);
+        if (!StringUtils.isEmpty(min)) {
+            queryWrapper.ge("price", min);
         }
 
         String max = (String) params.get("max");
 
-        if(!StringUtils.isEmpty(max)  ){
-            try{
+        if (!StringUtils.isEmpty(max)) {
+            try {
                 BigDecimal bigDecimal = new BigDecimal(max);
 
-                if(bigDecimal.compareTo(new BigDecimal("0"))==1){
-                    queryWrapper.le("price",max);
+                if (bigDecimal.compareTo(new BigDecimal("0")) == 1) {
+                    queryWrapper.le("price", max);
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
 
             }
 
@@ -88,6 +89,11 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
         );
 
         return new PageUtils(page);
+    }
+
+    @Override
+    public List<SkuInfoEntity> getSkuBySpuId(Long spuId) {
+        return this.list(new QueryWrapper<SkuInfoEntity>().eq("spu_id", spuId));
     }
 
 }
