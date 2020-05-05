@@ -6,9 +6,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.io.File;
+import java.util.concurrent.TimeUnit;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -18,7 +21,7 @@ class GulimallProductApplicationTests {
     private BrandService brandService;
 
     @Autowired
-    private
+    private StringRedisTemplate stringRedisTemplate;
 
     @Test
     void contextLoads() {
@@ -32,6 +35,19 @@ class GulimallProductApplicationTests {
         boolean result = brandService.save(brandEntity);
         System.out.println(result);
     }
+
+    @Test
+    public void testStringRedisTemplate() {
+        ValueOperations<String, String> stringStringValueOperations = stringRedisTemplate.opsForValue();
+
+        // 保存
+        stringStringValueOperations.set("hello", "world", 30, TimeUnit.SECONDS);
+
+        // 查询
+        String hello = stringStringValueOperations.get("hello");
+        System.out.println(hello);
+    }
+
 
     @Test
     public void uploadTest() {

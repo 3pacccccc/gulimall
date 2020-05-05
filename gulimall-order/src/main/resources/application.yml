@@ -14,7 +14,7 @@ spring:
     url: jdbc:mysql://49.234.18.154:3306/gulimall_oms?characterEncoding=UTF-8
     driver-class-name: com.mysql.cj.jdbc.Driver
 mybatis-plus:
-  mapper-locations: classpath*:/mapper/**/*.xml  # classpath*表示其他项目下的classpath也一起扫描， 不带*表示只扫描自己的classpath
+  mapper-locations: classpath*:/mapper/**/*.xml
   global-config:
     db-config:
       id-type: auto
