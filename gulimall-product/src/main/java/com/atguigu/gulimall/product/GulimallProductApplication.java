@@ -1,9 +1,9 @@
 package com.atguigu.gulimall.product;
 
-import com.alibaba.cloud.nacos.NacosConfigAutoConfiguration;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 
@@ -52,18 +52,43 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * 4、统一的异常处理
  * @ControllerAdvice 1）、编写异常处理类，使用@ControllerAdvice。
  * 2）、使用@ExceptionHandler标注方法可以处理的异常。
- *
+ * <p>
  * 5. 模板引擎
  * 1).thymeleaf-starter: 关闭缓存
  * 2).静态资源都放在static文件夹下就可以按照路径直接访问
  * 3).页面放在templates下，直接访问
- *  springboot, 访问项目的时候，默认会找index
+ * springboot, 访问项目的时候，默认会找index
  * 4).页面修改不重启服务器实时更新
- *      1). 引入dev-tools
- *      2). 将thymeleaf-cache置为false
- *      3). ctrl + shift + F9对html文件重新编译
+ * 1). 引入dev-tools
+ * 2). 将thymeleaf-cache置为false
+ * 3). ctrl + shift + F9对html文件重新编译
+ * 6. 整合redis
+ * 1). 引入data-redis-starter
+ * 2).简单配置redis的host等信息
+ * 3).使用spring boot自动配置好的StringRedisTemplate来操作redis
+ * 7. 整合redisson作为分布式锁等功能框架
+ * 1). 引入依赖
+ * 2). 配置redisson
+ * <p>
+ * 8. 整合springCache简化缓存开发
+ * 1). 引入依赖
+ * spring-boot-starter-cache、 spring-boot-starter-data-redis
+ * 2). 写配置
+ * (1). 自动配置了哪些？
+ * CacheAutoConfiguration会导入RedisCacheConfiguration
+ * 自动配好了缓存管理器redisCacheManager
+ * (2). 配置使用redis作为缓存
+ * 3). 测试使用缓存
+ * @Cacheable: 触发将数据保存到缓存的操作
+ * @CacheEvict: 触发将数据从缓存删除的操作
+ * @CachePut: 不影响方法执行更新缓存
+ * @Caching: 组合以上多个操作
+ * @CacheConfig: 在类级别共享缓存的相同配置
+ * (1)开启缓存功能：@EnableCaching
+ * (2)使用各种注解
  */
 
+@EnableCaching
 @EnableDiscoveryClient
 @MapperScan("com.atguigu.gulimall.product.dao")
 @EnableFeignClients(basePackages = "com.atguigu.gulimall.product.feign")
