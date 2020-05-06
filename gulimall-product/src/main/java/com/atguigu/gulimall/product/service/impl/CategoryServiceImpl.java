@@ -16,7 +16,9 @@ import org.apache.commons.lang.StringUtils;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
@@ -78,6 +80,14 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         return parentPath.toArray(new Long[parentPath.size()]);
     }
 
+    // 表示updateCascade方法下的数据一更新，就会删除category目录下的名字为getLevel1Categories的缓存
+//    @CacheEvict(value = "category", key = "'getLevel1Categories'")
+
+//    @Caching(evict = {
+//            @CacheEvict(value = "category", key = "'getLevel1Categories'"),
+//            @CacheEvict(value = "category", key = "'getCatalogJson'"),
+//    }) // 修改多个缓存操作,Caching是组合操作，清除多个缓存
+    @CacheEvict(value = "category", allEntries = true) // 对该分区下的所有缓存进行组合删除。所以同一类型的缓存建议放在同一分区下面，后续比较好操作
     @Override
     public void updateCascade(CategoryEntity categoryEntity) {
         this.updateById(categoryEntity);
@@ -95,17 +105,30 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
      * 1.每一个需要缓存的数据我们都来指定要放到那个名字的缓存。【缓存的分区(按照业务类型划分)】
      * 2. @Cacheable({"category"}) // 代表当前方法的结果需要缓存，如果缓存中有，方法不用调用。如果缓存中没有，才会调用方法
      * 3. 默认行为:
-     * 1). 如果缓存中有，方法不用调用。
-     * 2). key默认自动生成，缓存的名字：：SimpleKey [](自主生成的key值)。
-     * 3). 缓存的value的值，默认使用json序列化机制，将序列化后的数据存到redis。
-     * 4). 默认ttl时间：-1。
+     *      1). 如果缓存中有，方法不用调用。
+     *      2). key默认自动生成，缓存的名字：：SimpleKey [](自主生成的key值)。
+     *      3). 缓存的value的值，默认使用json序列化机制，将序列化后的数据存到redis。
+     *      4). 默认ttl时间：-1。
      * 自定义:
-     * 1). 指定生成的缓存使用的key: key属性指定，接收SpEl表达式
-     * SpEl详细餐换文档：https://docs.spring.io/spring/docs/.............../
-     * 2). 指定缓存的数据的存活时间: 配置文件中配置spring.cache.redis.time-to-live=3600000。(单位:ms)
-     * 3). 将数据保存为json格式;
+     *      1). 指定生成的缓存使用的key: key属性指定，接收SpEl表达式
+     *      SpEl详细餐换文档：https://docs.spring.io/spring/docs/.............../
+     *      2). 指定缓存的数据的存活时间: 配置文件中配置spring.cache.redis.time-to-live=3600000。(单位:ms)
+     *      3). 将数据保存为json格式: 自定义RedisCacheConfiguration即可
+     *
+     *  4. Spring-Cache的不足:
+     *      1). 读模式:
+     *          缓存穿透:查询一个null的数据。解决: cache-null-values = true
+     *          缓存击穿: 大量并发进来同事查询一个正好过期的数据。解决: 加锁？默认是无锁的.    @Cacheable(value = {"category"}, key = "#root.method.name", sync = true)加一个本地锁，而且是读的本地锁
+     *          缓存雪崩：大量的key同时过期。解决：加随机时间。加上过期时间. spring.cache.redis.time-to-live=xxx ms
+     *      2). 写模式: (缓存与数据库一致)
+     *          1). 读写加锁(适用于读多写少的情况)
+     *          2). 引入canal, 感知到mysql的更新去更新数据库
+     *          3). 读多写多，直接查询数据库
+     *      总结:
+     *           常规数据(读多写少, 即时性，一致性要求不高的数据): 完全可以使用spring-Cache
+     *           特殊数据: 特殊设计
      */
-    @Cacheable(value = {"category"}, key = "#root.method.name")
+    @Cacheable(value = {"category"}, key = "#root.method.name", sync = true) // 加锁，使得缓存的读变为同步执行
     @Override
     public List<CategoryEntity> getLevel1Categories() {
         // 1. 查出所有分类
