@@ -1,10 +1,14 @@
 package com.atguigu.gulimall.search.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.to.es.SkuEsModel;
+import com.atguigu.common.utils.R;
 import com.atguigu.gulimall.search.config.GulimallElasticSearchConfig;
 import com.atguigu.gulimall.search.constant.EsConstant;
+import com.atguigu.gulimall.search.feign.ProductFeignService;
 import com.atguigu.gulimall.search.service.MallSearchService;
+import com.atguigu.gulimall.search.vo.AttrResponseVo;
 import com.atguigu.gulimall.search.vo.SearchParam;
 import com.atguigu.gulimall.search.vo.SearchResult;
 import org.apache.lucene.search.join.ScoreMode;
@@ -26,6 +30,7 @@ import org.elasticsearch.search.aggregations.bucket.terms.Terms;
 import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -46,6 +51,9 @@ public class MallSearchServiceImpl implements MallSearchService {
     @Autowired
     private RestHighLevelClient client;
 
+    @Autowired
+    private ProductFeignService productFeignService;
+
     @Override
     public SearchResult search(SearchParam param) {
 
@@ -60,7 +68,7 @@ public class MallSearchServiceImpl implements MallSearchService {
             e.printStackTrace();
         }
 
-        return null;
+        return result;
     }
 
     private SearchResult buildSearchResult(SearchResponse response, SearchParam param) {
@@ -73,6 +81,12 @@ public class MallSearchServiceImpl implements MallSearchService {
             for (SearchHit hit : hits.getHits()) {
                 String sourceAsString = hit.getSourceAsString();
                 SkuEsModel esModel = JSON.parseObject(sourceAsString, SkuEsModel.class);
+                if (!StringUtils.isEmpty(param.getKeyword())) {
+                    HighlightField skuTitle = hit.getHighlightFields().get("skuTitle");
+                    String string = skuTitle.getFragments()[0].string();
+                    esModel.setSkuTitle(string);
+                }
+
                 esModels.add(esModel);
             }
         }
@@ -137,6 +151,38 @@ public class MallSearchServiceImpl implements MallSearchService {
             catalogVos.add(catalogVo);
         }
         result.setCatalogs(catalogVos);
+
+        // 5. 分页信息
+        result.setPageNum(param.getPageNum());
+        long total = hits.getTotalHits().value;
+        result.setTotal(total);
+        int totalPages = (int) total % EsConstant.PRODUCT_PAGE_SIZE == 0 ? (int) total / EsConstant.PRODUCT_PAGE_SIZE : (int) total / EsConstant.PRODUCT_PAGE_SIZE + 1;
+        result.setTotalPages(totalPages);
+
+        List<Integer> pageNavs = new ArrayList<>();
+        for (int i = 1; i < totalPages; i++) {
+            pageNavs.add(i);
+        }
+        result.setPageNavs(pageNavs);
+
+        // 6. 构建面包屑导航功能
+        List<SearchResult.NavVo> collect = param.getAttrs().stream().map(attr -> {
+            //分析每个attrs传过来的查询参数值 attrs=2_5寸:6寸
+            SearchResult.NavVo navVo = new SearchResult.NavVo();
+            String[] s = attr.split("_");
+            navVo.setNavValue(s[1]);
+
+            R r = productFeignService.attrInfo(Long.parseLong(s[0]));
+            if (r.getCode() == 0) {
+                AttrResponseVo data = r.getData("attr", new TypeReference<AttrResponseVo>() {
+                });
+                navVo.setNavName(data.getAttrName());
+            } else{
+                navVo.setNavName(s[0]);
+            }
+            //
+            return navVo;
+        }).collect(Collectors.toList());
         return result;
     }
 
@@ -181,7 +227,9 @@ public class MallSearchServiceImpl implements MallSearchService {
             }
         }
         // 1.2 bool -filter - 按照库存是否有进行查询
-        boolQuery.filter(QueryBuilders.termQuery("hasStock", param.getHasStock() == 1));
+        if (param.getHasStock() != null) {
+            boolQuery.filter(QueryBuilders.termQuery("hasStock", param.getHasStock() == 1));
+        }
         // 1.2 bool -filter - 按照价格区间
         if (!StringUtils.isEmpty(param.getSkuPrice())) {
             RangeQueryBuilder rangeQuery = QueryBuilders.rangeQuery("skuPrice");
