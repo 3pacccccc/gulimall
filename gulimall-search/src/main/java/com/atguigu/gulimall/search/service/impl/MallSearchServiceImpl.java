@@ -9,6 +9,7 @@ import com.atguigu.gulimall.search.constant.EsConstant;
 import com.atguigu.gulimall.search.feign.ProductFeignService;
 import com.atguigu.gulimall.search.service.MallSearchService;
 import com.atguigu.gulimall.search.vo.AttrResponseVo;
+import com.atguigu.gulimall.search.vo.BrandVo;
 import com.atguigu.gulimall.search.vo.SearchParam;
 import com.atguigu.gulimall.search.vo.SearchResult;
 import org.apache.lucene.search.join.ScoreMode;
@@ -37,6 +38,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -166,24 +169,65 @@ public class MallSearchServiceImpl implements MallSearchService {
         result.setPageNavs(pageNavs);
 
         // 6. 构建面包屑导航功能
-        List<SearchResult.NavVo> collect = param.getAttrs().stream().map(attr -> {
-            //分析每个attrs传过来的查询参数值 attrs=2_5寸:6寸
-            SearchResult.NavVo navVo = new SearchResult.NavVo();
-            String[] s = attr.split("_");
-            navVo.setNavValue(s[1]);
+        if (param.getAttrs() != null && param.getAttrs().size() > 0) {
+            List<SearchResult.NavVo> collect = param.getAttrs().stream().map(attr -> {
+                //分析每个attrs传过来的查询参数值 attrs=2_5寸:6寸
+                SearchResult.NavVo navVo = new SearchResult.NavVo();
+                String[] s = attr.split("_");
+                navVo.setNavValue(s[1]);
 
-            R r = productFeignService.attrInfo(Long.parseLong(s[0]));
+                R r = productFeignService.attrInfo(Long.parseLong(s[0]));
+                result.getAttrIds().add(Long.parseLong(s[0]));
+                if (r.getCode() == 0) {
+                    AttrResponseVo data = r.getData("attr", new TypeReference<AttrResponseVo>() {
+                    });
+                    navVo.setNavName(data.getAttrName());
+                } else {
+                    navVo.setNavName(s[0]);
+                }
+                // 2.拿到面包屑以后，我们要跳转到那个地方，将请求地址的url里面的当前置空
+                // 拿到所有的查询条件，去掉当前
+                // attrs = 15_海思(Hisilicon)
+                String replace = replaceQueryString(param, attr, "attrs");
+                navVo.setLink("http://search.gulimall.com/list.html?" + replace);
+                return navVo;
+            }).collect(Collectors.toList());
+            result.setNavs(collect);
+        }
+
+        // 品牌，分类
+        if (param.getBrandId() != null && param.getBrandId().size() > 0) {
+            List<SearchResult.NavVo> navs = result.getNavs();
+            SearchResult.NavVo navVo = new SearchResult.NavVo();
+            navVo.setNavName("品牌");
+            R r = productFeignService.brandsInfo(param.getBrandId());
             if (r.getCode() == 0) {
-                AttrResponseVo data = r.getData("attr", new TypeReference<AttrResponseVo>() {
+                List<BrandVo> brand = r.getData("brand", new TypeReference<List<BrandVo>>() {
                 });
-                navVo.setNavName(data.getAttrName());
-            } else{
-                navVo.setNavName(s[0]);
+                StringBuffer buffer = new StringBuffer();
+                String replace = "";
+                for (BrandVo brandVo : brand) {
+                    buffer.append(brandVo.getBrandName() + ";");
+                    replace = replaceQueryString(param, brandVo.getBrandId() + "", "brandId");
+                }
+                navVo.setNavValue(buffer.toString());
+                navVo.setLink("http://search.gulimall.com/list.html" + replace);
             }
-            //
-            return navVo;
-        }).collect(Collectors.toList());
+            navs.add(navVo);
+        }
+
         return result;
+    }
+
+    private String replaceQueryString(SearchParam param, String value, String key) {
+        String attr1 = null;
+        try {
+            attr1 = URLEncoder.encode(value, "UTF-8");
+            attr1 = attr1.replace(" ", "%20");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        return param.get_queryString().replace("&" + key + "=" + attr1, "");
     }
 
     /**
