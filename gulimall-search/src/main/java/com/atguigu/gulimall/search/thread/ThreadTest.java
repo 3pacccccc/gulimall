@@ -1,5 +1,7 @@
 package com.atguigu.gulimall.search.thread;
 
+import com.sun.xml.internal.ws.util.CompletedFuture;
+
 import java.util.concurrent.*;
 
 /**
@@ -80,18 +82,18 @@ public class ThreadTest {
 //        }, executor);
 
         // 方法6: 两个都完成
-        CompletableFuture<Integer> future01 = CompletableFuture.supplyAsync(() -> {
-            System.out.println("任务1线程:" + Thread.currentThread().getId());
-            int i = 10 / 4;
-            System.out.println("任务1结束");
-            return i;
-        }, executor);
-        CompletableFuture<String> future02 = CompletableFuture.supplyAsync(() -> {
-            System.out.println("任务2线程:" + Thread.currentThread().getId());
-            int i = 10 / 4;
-            System.out.println("任务1结束");
-            return "hello";
-        }, executor);
+//        CompletableFuture<Object> future01 = CompletableFuture.supplyAsync(() -> {
+//            System.out.println("任务1线程:" + Thread.currentThread().getId());
+//            int i = 10 / 4;
+//            System.out.println("任务1结束");
+//            return i;
+//        }, executor);
+//        CompletableFuture<Object> future02 = CompletableFuture.supplyAsync(() -> {
+//            System.out.println("任务2线程:" + Thread.currentThread().getId());
+//            int i = 10 / 4;
+//            System.out.println("任务1结束");
+//            return "hello";
+//        }, executor);
 
         // runAfterBothAsync无法感知future01跟future02的结果
 //        future01.runAfterBothAsync(future02, () -> {
@@ -103,10 +105,50 @@ public class ThreadTest {
 //            System.out.println("任务3开始... 之前的结果" + f1 + f2);
 //        }, executor);
 
-        CompletableFuture<String> future = future01.thenCombineAsync(future02, (f1, f2) -> {
-            return f1 + ":" + f2 + ": hello";
+//        CompletableFuture<String> future = future01.thenCombineAsync(future02, (f1, f2) -> {
+//            return f1 + ":" + f2 + ": hello";
+//        }, executor);
+
+        /**
+         * 方法7: 两个任务，只要有一个完成，就执行任务3
+         *      runAfterEitherAsync:不感知结果，自己业务返回值
+         *      acceptEitherAsync:感知结果，自己无返回值
+          */
+
+//        future01.runAfterEitherAsync(future02, () -> {
+//            System.out.println("任务3开始...");
+//        });
+
+//        future01.acceptEitherAsync(future02, (res) -> {
+//            System.out.println("任务3开始..." + res);
+//        }, executor);
+
+//        CompletableFuture<String> future = future01.applyToEitherAsync(future02, res -> res.toString() + "->哈哈", executor);
+
+        /**
+         * 方法8 多任务
+         */
+        CompletableFuture<String> futureImg = CompletableFuture.supplyAsync(() -> {
+            System.out.println("查询商品的图片信息");
+            return "hello.jpg";
         }, executor);
-        System.out.println("main ... end ..." + future.get());
+        CompletableFuture<String> futureAttr = CompletableFuture.supplyAsync(() -> {
+            System.out.println("查询商品的图片信息");
+            return "黑色+256G";
+        }, executor);
+        CompletableFuture<String> futureDesc = CompletableFuture.supplyAsync(() -> {
+            try {
+                Thread.sleep(5000);
+                System.out.println("查询商品介绍");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return "华为";
+        }, executor);
+//        CompletableFuture<Void> allOf = CompletableFuture.allOf(futureImg, futureAttr, futureDesc);
+        CompletableFuture<Object> anyOf = CompletableFuture.anyOf(futureImg, futureAttr, futureDesc);
+//        allOf.get();
+        System.out.println("main ... end ..." + anyOf.get());
 
     }
 
