@@ -17,6 +17,8 @@ public class SkuItemVo {
     // sku基本信息获取 pms_sku_info
     SkuInfoEntity info;
 
+    boolean hasStock = true;
+
     // sku的图片信息，pms_sku_images
     List<SkuImagesEntity> images;
 

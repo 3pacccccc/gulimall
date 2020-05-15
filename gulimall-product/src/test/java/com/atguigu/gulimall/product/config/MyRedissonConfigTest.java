@@ -1,6 +1,8 @@
 package com.atguigu.gulimall.product.config;
 
 import com.atguigu.gulimall.product.dao.AttrGroupDao;
+import com.atguigu.gulimall.product.dao.SkuSaleAttrValueDao;
+import com.atguigu.gulimall.product.vo.SkuItemSaleAttrVo;
 import com.atguigu.gulimall.product.vo.SpuItemAttrGroupVo;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -33,9 +35,17 @@ class MyRedissonConfigTest {
     @Autowired
     private AttrGroupDao attrGroupDao;
 
+    @Autowired
+    private SkuSaleAttrValueDao skuSaleAttrValueDao;
+
     @Test
     public void test(){
         List<SpuItemAttrGroupVo> attrGroupWithAttrsBySpuId = attrGroupDao.getAttrGroupWithAttrsBySpuId(1L, 1L);
         System.out.println(attrGroupWithAttrsBySpuId);
+    }
+    @Test
+    public void test2(){
+        List<SkuItemSaleAttrVo> saleAttrsBySpuId = skuSaleAttrValueDao.getSaleAttrsBySpuId(13L);
+        System.out.println(saleAttrsBySpuId);
     }
 }
