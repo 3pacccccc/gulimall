@@ -47,3 +47,8 @@ spring:
           predicates:
             - Host=123.56.163.3
 
+        - id: gulimall_auth_route
+          uri: lb://gulimall-auth-server
+          predicates:
+            - Host=123.56.163.3
+
