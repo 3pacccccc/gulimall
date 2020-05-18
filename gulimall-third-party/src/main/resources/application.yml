@@ -3,7 +3,13 @@ spring:
     nacos:
       discovery:
         server-addr: 49.234.18.154:8848
-
+  alicloud:
+    sms:
+      host: https://smsmsgs.market.alicloudapi.com
+      path: /sms/
+      skin: 1
+      sign: 1
+      app-code: 128a0abcd6f940d6aa84933197a1ca3b
   application:
     name: gulimall-third-party
 server:
