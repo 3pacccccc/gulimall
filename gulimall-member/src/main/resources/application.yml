@@ -3,7 +3,7 @@ spring:
     username: xiaoma
     password: 555dedd+5
     url: jdbc:mysql://49.234.18.154:3306/gulimall_ums?characterEncoding=UTF-8
-    driver-class-name: com.mysql.jdbc.Driver
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   cloud:
     nacos:
@@ -19,3 +19,6 @@ mybatis-plus:
       id-type: auto
 server:
   port: 8000
+logging:
+  level:
+    com.atguigu.gulimall: debug
