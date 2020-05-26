@@ -2,6 +2,7 @@ package com.atguigu.gulimall.auth.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.atguigu.common.constant.AuthServerConstant;
 import com.atguigu.common.utils.HttpUtils;
 import com.atguigu.common.utils.R;
 import com.atguigu.gulimall.auth.feign.MemberFeignService;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import javax.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +33,7 @@ public class Oauth2Controller {
     MemberFeignService memberFeignService;
 
     @GetMapping("/oauth2.0/weibo/success")
-    public String weibo(@RequestParam("code") String code) throws Exception {
+    public String weibo(@RequestParam("code") String code, HttpSession session) throws Exception {
         Map<String, String> header = new HashMap<>();
         Map<String, String> query = new HashMap<>();
         Map<String, String> map = new HashMap<>();
@@ -54,6 +56,7 @@ public class Oauth2Controller {
                 // 登录成功
                 MemberRespVo data = oauthlogin.getData("data", new TypeReference<MemberRespVo>() {
                 });
+                session.setAttribute(AuthServerConstant.LOGIN_USER, data);
                 System.out.println("登录成功，用户: {}" + data.toString());
                 log.info("登录成功, 用户：{}" , data.toString());
                 return "redirect:http://pornhub.com";

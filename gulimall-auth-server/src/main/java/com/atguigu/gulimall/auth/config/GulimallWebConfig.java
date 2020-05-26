@@ -26,7 +26,7 @@ public class GulimallWebConfig  implements WebMvcConfigurer {
          *         return "reg";
          *     }
          */
-        registry.addViewController("/login.html").setViewName("login");
+//        registry.addViewController("/login.html").setViewName("login");
         registry.addViewController("/reg.html").setViewName("reg");
     }
 }
