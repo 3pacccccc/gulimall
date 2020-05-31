@@ -52,7 +52,9 @@ public class Cart {
         // 1. 计算购物车总价
         if (items != null && items.size() > 0) {
             for (CartItem cartItem : items) {
-                amount = amount.add(cartItem.getTotalPrice());
+                if (cartItem.getCheck()) {
+                    amount = amount.add(cartItem.getTotalPrice());
+                }
             }
         }
         // 2. 减去优惠价格

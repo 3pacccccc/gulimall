@@ -14,7 +14,7 @@ import java.util.Date;
 @ToString
 public class MemberRespVo implements Serializable {
 
-    private String id;
+    private Long id;
     /**
      * 会员等级id
      */

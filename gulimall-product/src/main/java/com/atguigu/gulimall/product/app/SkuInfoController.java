@@ -27,8 +27,16 @@ public class SkuInfoController {
 
     @Autowired
     private SpuInfoService spuInfoService;
+
+    @GetMapping("/{skuId}/price")
+    public R getPrice(@PathVariable("skuId") Long skuId) {
+        SkuInfoEntity byId = skuInfoService.getById(skuId);
+        return R.ok().setData(byId.getPrice().toString());
+    }
+
     /**
      * 商品上架功能
+     *
      * @return
      */
     @PostMapping("/{spuId}/up")
