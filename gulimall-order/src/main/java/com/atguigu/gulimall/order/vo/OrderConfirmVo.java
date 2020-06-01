@@ -1,11 +1,11 @@
 package com.atguigu.gulimall.order.vo;
 
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author: maruimin
@@ -23,6 +23,10 @@ public class OrderConfirmVo {
     @Setter
     @Getter
     List<OrderItemVo> items;
+
+    @Setter
+    @Getter
+    Map<Long, Boolean> stocks;
 
     // 发票记录
 
@@ -47,7 +51,8 @@ public class OrderConfirmVo {
     }
 
     // 防重令牌
-    @Setter @Getter
+    @Setter
+    @Getter
     String orderToken;
 
 }

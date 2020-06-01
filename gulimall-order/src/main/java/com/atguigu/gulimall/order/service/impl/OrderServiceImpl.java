@@ -1,17 +1,21 @@
 package com.atguigu.gulimall.order.service.impl;
 
+import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.utils.PageUtils;
 import com.atguigu.common.utils.Query;
+import com.atguigu.common.utils.R;
 import com.atguigu.common.vo.MemberRespVo;
 import com.atguigu.gulimall.order.dao.OrderDao;
 import com.atguigu.gulimall.order.entity.OrderEntity;
 import com.atguigu.gulimall.order.feign.CartFeignService;
 import com.atguigu.gulimall.order.feign.MemberFeignService;
+import com.atguigu.gulimall.order.feign.WmsFeignService;
 import com.atguigu.gulimall.order.interceptor.LoginUserInterceptor;
 import com.atguigu.gulimall.order.service.OrderService;
 import com.atguigu.gulimall.order.vo.MemberAddressVo;
 import com.atguigu.gulimall.order.vo.OrderConfirmVo;
 import com.atguigu.gulimall.order.vo.OrderItemVo;
+import com.atguigu.gulimall.order.vo.SkuStockVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -25,6 +29,8 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @Service("orderService")
@@ -38,6 +44,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
     @Autowired
     ThreadPoolExecutor executor;
+
+    @Autowired
+    WmsFeignService wmsFeignService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -69,6 +78,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
             List<OrderItemVo> currentUserCartItems = cartFeignService.getCurrentUserCartItems();
             confirmVo.setItems(currentUserCartItems);
             // 注意: feign调用其他服务是不会携带cookie等参数的，所以直接请求过去会被认为没有登录，所以需要配置RequestInterceptor信息
+        }, executor).thenRunAsync(() -> {
+            List<OrderItemVo> items = confirmVo.getItems();
+            List<Long> collect = items.stream().map(OrderItemVo::getSkuId).collect(Collectors.toList());
+            R skuHasStock = wmsFeignService.getSkuHasStock(collect);
+            List<SkuStockVo> data = skuHasStock.getData(new TypeReference<List<SkuStockVo>>() {
+            });
+            if (data != null) {
+                Map<Long, Boolean> map = data.stream().collect(Collectors.toMap(SkuStockVo::getSkuId, SkuStockVo::getHasStock));
+                confirmVo.setStocks(map);
+            }
         }, executor);
         // 3. 查询用户积分
         Integer integration = memberRespVo.getIntegration();
