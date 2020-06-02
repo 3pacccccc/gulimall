@@ -8,6 +8,7 @@ import com.atguigu.gulimall.ware.dao.WareInfoDao;
 import com.atguigu.gulimall.ware.entity.WareInfoEntity;
 import com.atguigu.gulimall.ware.feign.MemberFeignService;
 import com.atguigu.gulimall.ware.service.WareInfoService;
+import com.atguigu.gulimall.ware.vo.FareVo;
 import com.atguigu.gulimall.ware.vo.MemberAddressVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -45,17 +46,18 @@ public class WareInfoServiceImpl extends ServiceImpl<WareInfoDao, WareInfoEntity
     }
 
     @Override
-    public BigDecimal getFare(Long addrId) {
-
+    public FareVo getFare(Long addrId) {
+        FareVo fareVo = new FareVo();
         R r = memberFeignService.addrInfo(addrId);
         MemberAddressVo data = r.getData("memberReceiveAddress", new TypeReference<MemberAddressVo>() {
         });
         if (data != null) {
             String phone = data.getPhone();
             String substring = phone.substring(phone.length() - 1, phone.length());
-            return new BigDecimal(substring);
+            BigDecimal bigDecimal = new BigDecimal(substring);
+            fareVo.setAddress(data);
+            fareVo.setFare(bigDecimal);
         }
-        return null;
+        return fareVo;
     }
-
 }
