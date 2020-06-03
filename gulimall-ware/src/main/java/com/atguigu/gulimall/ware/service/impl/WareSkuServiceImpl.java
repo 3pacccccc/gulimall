@@ -7,7 +7,9 @@ import com.atguigu.gulimall.ware.dao.WareSkuDao;
 import com.atguigu.gulimall.ware.entity.WareSkuEntity;
 import com.atguigu.gulimall.ware.feign.ProductFeignService;
 import com.atguigu.gulimall.ware.service.WareSkuService;
+import com.atguigu.gulimall.ware.vo.LockStockResult;
 import com.atguigu.gulimall.ware.vo.SkuHasStockVo;
+import com.atguigu.gulimall.ware.vo.WareSkuLockVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -97,6 +99,12 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
             return vo;
         }).collect(Collectors.toList());
         return collect;
+    }
+
+    @Override
+    public List<LockStockResult> orderLockStock(WareSkuLockVo vo) {
+
+
     }
 
 }
