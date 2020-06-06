@@ -1,16 +1,15 @@
 package com.atguigu.gulimall.order.service.impl;
 
 import com.alibaba.fastjson.TypeReference;
+import com.atguigu.common.exception.NoStockException;
 import com.atguigu.common.utils.PageUtils;
 import com.atguigu.common.utils.Query;
 import com.atguigu.common.utils.R;
 import com.atguigu.common.vo.MemberRespVo;
 import com.atguigu.gulimall.order.constant.OrderConstant;
 import com.atguigu.gulimall.order.dao.OrderDao;
-import com.atguigu.gulimall.order.dao.OrderItemDao;
 import com.atguigu.gulimall.order.entity.OrderEntity;
 import com.atguigu.gulimall.order.entity.OrderItemEntity;
-import com.atguigu.gulimall.order.enume.OrderStatusEnum;
 import com.atguigu.gulimall.order.feign.CartFeignService;
 import com.atguigu.gulimall.order.feign.MemberFeignService;
 import com.atguigu.gulimall.order.feign.ProductFeignService;
@@ -24,10 +23,13 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestAttributes;
@@ -128,6 +130,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         confirmVoThreadLocal.set(vo);
         SubmitOrderResponseVo response = new SubmitOrderResponseVo();
         MemberRespVo memberRespVo = LoginUserInterceptor.loginUser.get();
+        response.setCode(0);
         // 1. 验证令牌【令牌的对比和删除必须保证原子性】
         // 0令牌失败 1 删除成功
         String script = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS) else return 0 end";
@@ -136,6 +139,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         Long result = (Long) redisTemplate.execute(new DefaultRedisScript<Long>(script, Long.class), Arrays.asList(OrderConstant.USER_ORDER_TOKEN_PREFIX + memberRespVo.getId()), orderToken);
         if (result == 0L) {
             // 令牌验证失败
+            response.setCode(1);
             return response;
         } else {
             // 验证成功
@@ -163,8 +167,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                 R r = wmsFeignService.orderLockStock(lockVo);
                 if (r.getCode() == 0) {
                     // 锁成功了
+                    response.setOrder(order.getOrder());
+                    return response;
                 } else {
                     // 锁失败了
+//                    throw new NoStockException(1L);
+                    response.setCode(3);
+                    return response;
                 }
             } else {
                 // 验价没通过
@@ -200,6 +209,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
         // 3. 计算价格、积分等相关
         computePrice(entity, orderItemEntities);
+
+        createTo.setOrder(entity);
+        createTo.setOrderItems(orderItemEntities);
 
         return createTo;
     }
@@ -259,7 +271,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         entity.setReceiverProvince(fareResp.getAddress().getProvince());
         entity.setReceiverRegion(fareResp.getAddress().getRegion());
         // 设置订单的相关状态信息
-        entity.setStatus(OrderStatusEnum.CREATE_NEW.getCode());
+//        entity.setStatus(OrderStatusEnum.CREATE_NEW.getCode());
+        entity.setStatus(0);
         entity.setAutoConfirmDay(7);
 
         return entity;
@@ -317,4 +330,26 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         itemEntity.setRealAmount(subtract);
         return itemEntity;
     }
+
+    @Transactional(timeout = 30) // a事务的所有设置就传播到了和他公用一个事务的方法
+    public void a() {
+//        b(); // 跟a共享1个事务，所以a,b都会回滚
+//        c(); // 新事务(不回滚)
+        OrderServiceImpl orderService = (OrderServiceImpl) AopContext.currentProxy();
+        orderService.b();
+        orderService.c();
+
+        int i = 10 / 0;
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED, timeout = 2)
+    public void b() {
+        // 因为函数a发生异常，b跟a公用1个事务，所以b也会回滚。并且设置的timeout = 2不会生效。
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW, timeout = 20)
+    public void c() {
+        // 新的事务，a发生异常也不会回滚。timeout=20生效
+    }
+
 }
