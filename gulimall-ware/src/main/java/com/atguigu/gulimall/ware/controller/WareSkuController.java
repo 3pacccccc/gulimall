@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import com.atguigu.common.exception.BizCodeEnume;
+import com.atguigu.gulimall.ware.exception.NoStockException;
 import com.atguigu.gulimall.ware.vo.LockStockResult;
 import com.atguigu.gulimall.ware.vo.SkuHasStockVo;
 import com.atguigu.gulimall.ware.vo.WareSkuLockVo;
@@ -40,8 +42,13 @@ public class WareSkuController {
     // 查询对应sku是否有库存
     @PostMapping("/lock/order")
     public R orderLockStock(@RequestBody WareSkuLockVo vo) {
-        List<LockStockResult> stockResults = wareSkuService.orderLockStock(vo);
-        return R.ok().setData(stockResults);
+        try {
+            wareSkuService.orderLockStock(vo);
+            return R.ok();
+        } catch (NoStockException e){
+            return R.error(BizCodeEnume.NO_STOCK_EXCEPTION.getCode(), BizCodeEnume.NO_STOCK_EXCEPTION.getMsg());
+        }
+
     }
 
 
