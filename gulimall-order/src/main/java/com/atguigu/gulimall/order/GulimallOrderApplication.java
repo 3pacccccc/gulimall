@@ -33,6 +33,19 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
  *         OrderServiceImpl orderService = (OrderServiceImpl) AopContext.currentProxy();
  *         orderService.b();
  *         orderService.c();
+ *
+ *  seata控制分布式事务
+ *      1). 每一个微服务数据库中先必须创建一个undo_log表
+ *      2). 安装事务协调器: seata-server: https://github.com/seata/seata/release
+ *      3). 整合
+ *          1.导入依赖: spring-cloud-starter-alibaba-seata seata-all-0.7.1
+ *          2. 解压并启动seata-server
+ *                  registry.conf: 注册中心配置；修改registry type=nacos
+ *                  file.conf;
+ *          3. 所有想要用到分布式事务的微服务使用seata DataSourceProxy代理自己的数据源
+ *          4. 每个微服务，都必须导入registry.conf、file.conf文件到resources目录,并修改 file.conf里面的vgroup_mapping.{application-name}-fescar-service-group="default"
+ *          5. 启动服务
+ *          6. 给分布式大事务的入口标注@GlobalTransactional,其他服务还是标注@Transaactional
  */
 
 @EnableAspectJAutoProxy(exposeProxy = true)
