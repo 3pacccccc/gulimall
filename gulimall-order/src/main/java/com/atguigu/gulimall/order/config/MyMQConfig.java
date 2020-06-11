@@ -1,9 +1,7 @@
 package com.atguigu.gulimall.order.config;
 
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.Exchange;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.core.*;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -21,8 +19,8 @@ public class MyMQConfig {
     @Bean
     public Queue orderDelayQueue() {
         Map<String, Object> arguments = new HashMap<>();
-        arguments.put("x-dead-letters-exchange", "order-event-exchange");
-        arguments.put("x-dead-letters-routing-key", "order.release.order");
+        arguments.put("x-dead-letter-exchange", "order-event-exchange");
+        arguments.put("x-dead-letter-routing-key", "order.release.order");
         arguments.put("x-message-ttl", 60000);
         return new Queue("order.delay.queue", true, false, false, arguments);
     }
@@ -54,5 +52,16 @@ public class MyMQConfig {
                 "order.release.order",
                 null);
     }
+
+    @RabbitListener(queues = "order.release.order.queue")
+    public void handle1(Message message) {
+
+    }
+
+    @RabbitListener(queues = "order.delay.queue\"")
+    public void handle2(Message message) {
+
+    }
+
 
 }
