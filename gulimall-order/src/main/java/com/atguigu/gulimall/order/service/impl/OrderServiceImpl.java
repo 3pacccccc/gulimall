@@ -186,6 +186,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         return this.getOne(new QueryWrapper<OrderEntity>().eq("order_sn", orderSn));
     }
 
+    @Override
+    public void closeOrder(OrderEntity entity) {
+        
+    }
+
     /**
      * 保存订单数据
      *
