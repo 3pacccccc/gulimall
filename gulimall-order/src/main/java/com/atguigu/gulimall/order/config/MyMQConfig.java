@@ -53,6 +53,15 @@ public class MyMQConfig {
                 null);
     }
 
+    @Bean
+    public Binding OrderReleaseOtherBinding() {
+        return new Binding("stock.release.stock.queue",
+                Binding.DestinationType.QUEUE,
+                "order-event-exchange",
+                "order.release.other.#",
+                null);
+    }
+
     @RabbitListener(queues = "order.release.order.queue")
     public void handle1(Message message) {
 

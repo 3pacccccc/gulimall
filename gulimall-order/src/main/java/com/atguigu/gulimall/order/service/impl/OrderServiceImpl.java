@@ -1,6 +1,7 @@
 package com.atguigu.gulimall.order.service.impl;
 
 import com.alibaba.fastjson.TypeReference;
+import com.atguigu.common.mq.OrderTo;
 import com.atguigu.common.utils.PageUtils;
 import com.atguigu.common.utils.Query;
 import com.atguigu.common.utils.R;
@@ -9,6 +10,7 @@ import com.atguigu.gulimall.order.constant.OrderConstant;
 import com.atguigu.gulimall.order.dao.OrderDao;
 import com.atguigu.gulimall.order.entity.OrderEntity;
 import com.atguigu.gulimall.order.entity.OrderItemEntity;
+import com.atguigu.gulimall.order.enume.OrderStatusEnum;
 import com.atguigu.gulimall.order.feign.CartFeignService;
 import com.atguigu.gulimall.order.feign.MemberFeignService;
 import com.atguigu.gulimall.order.feign.ProductFeignService;
@@ -22,7 +24,9 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.aop.framework.AopContext;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -67,6 +71,9 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
     @Autowired
     ProductFeignService productFeignService;
+
+    @Autowired
+    RabbitTemplate rabbitTemplate;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -166,6 +173,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                 if (r.getCode() == 0) {
                     // 锁成功了
                     response.setOrder(order.getOrder());
+                    rabbitTemplate.convertAndSend("order-event-exchange", "order.create.order", order.getOrder());
                     return response;
                 } else {
                     // 锁失败了
@@ -188,7 +196,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
 
     @Override
     public void closeOrder(OrderEntity entity) {
-        
+        // 查询当前这个订单的最新状态
+        OrderEntity orderEntity = this.getById(entity.getId());
+        if (orderEntity.getStatus().equals(OrderStatusEnum.CREATE_NEW.getCode())) {
+            // 关闭订单
+            OrderEntity update = new OrderEntity();
+            update.setId(entity.getId());
+            update.setStatus(OrderStatusEnum.CANCLED.getCode());
+            this.updateById(update);
+            OrderTo orderTo = new OrderTo();
+            BeanUtils.copyProperties(orderEntity, orderTo);
+            // 发给MQ一个
+            rabbitTemplate.convertAndSend("order-event-exchange", "order.release.other", orderTo);
+        }
     }
 
     /**

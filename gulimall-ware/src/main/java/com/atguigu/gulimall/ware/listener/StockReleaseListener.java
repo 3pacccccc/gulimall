@@ -1,5 +1,6 @@
 package com.atguigu.gulimall.ware.listener;
 
+import com.atguigu.common.mq.OrderTo;
 import com.atguigu.common.mq.StockLockedTo;
 import com.atguigu.gulimall.ware.service.WareOrderTaskDetailService;
 import com.atguigu.gulimall.ware.service.WareOrderTaskService;
@@ -35,6 +36,18 @@ public class StockReleaseListener {
     @RabbitHandler
     public void handleStockLockedRelease(StockLockedTo to, Message message, Channel channel) throws IOException {
         System.out.println("收到解锁库存的消息.......");
+        try {
+            wareSkuService.unlockStock(to);
+            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+        } catch (Exception e) {
+            channel.basicReject(message.getMessageProperties().getDeliveryTag(), true);
+        }
+
+    }
+
+    @RabbitHandler
+    public void handleOrderCloseRelease(OrderTo to, Message message, Channel channel) throws IOException {
+        System.out.println("订单关闭准备解锁库存.............");
         try {
             wareSkuService.unlockStock(to);
             channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
