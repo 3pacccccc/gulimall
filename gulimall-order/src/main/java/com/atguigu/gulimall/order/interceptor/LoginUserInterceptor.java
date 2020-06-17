@@ -24,8 +24,10 @@ public class LoginUserInterceptor implements HandlerInterceptor {
 
         // 对/order/order/status/下的所有请求直接放行，无需登录
         String uri = request.getRequestURI();
-        boolean match = new AntPathMatcher().match("/order/order/status/**", uri);
-        if (match) {
+        AntPathMatcher antPathMatcher = new AntPathMatcher();
+        boolean match = antPathMatcher.match("/order/order/status/**", uri);
+        boolean match1 = antPathMatcher.match("/payed/notify", uri);
+        if (match || match1) {
             return true;
         }
 
