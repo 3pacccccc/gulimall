@@ -1,7 +1,5 @@
 package com.atguigu.gulimall.search.thread;
 
-import com.sun.xml.internal.ws.util.CompletedFuture;
-
 import java.util.concurrent.*;
 
 /**
@@ -113,7 +111,7 @@ public class ThreadTest {
          * 方法7: 两个任务，只要有一个完成，就执行任务3
          *      runAfterEitherAsync:不感知结果，自己业务返回值
          *      acceptEitherAsync:感知结果，自己无返回值
-          */
+         */
 
 //        future01.runAfterEitherAsync(future02, () -> {
 //            System.out.println("任务3开始...");
