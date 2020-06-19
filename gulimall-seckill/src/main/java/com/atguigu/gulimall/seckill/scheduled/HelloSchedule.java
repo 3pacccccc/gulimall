@@ -3,7 +3,6 @@ package com.atguigu.gulimall.seckill.scheduled;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +16,8 @@ import org.springframework.stereotype.Component;
  *      2. @Async 给希望异步执行的方法上标注
  *      3. 自动配置类 TaskExecutionAutoConfiguration
  */
-@EnableScheduling
+//@EnableScheduling
+//@EnableAsync
 @Component
 @Slf4j
 public class HelloSchedule {
