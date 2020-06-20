@@ -59,6 +59,15 @@ public class SeckillServiceImpl implements SeckillService {
         }
     }
 
+    // 返回当前时间可以参与的秒杀商品
+    @Override
+    public List<SeckillSkuRedisTo> getCurrentSeckillSkus() {
+        // 1. 确定当前时间属于哪个秒杀场次
+        // 1970 -
+
+        redisTemplate.keys(SESSIONS_CACHE_PREFIX + "*");
+    }
+
     private void saveSessionInfos(List<SeckillSessionsWithSkus> sessions) {
         sessions.forEach(session -> {
             long startTime = session.getStartTime().getTime();
