@@ -66,7 +66,7 @@ public class SeckillServiceImpl implements SeckillService {
             String key = SESSIONS_CACHE_PREFIX + startTime + "_" + endTime;
             Boolean hasKey = redisTemplate.hasKey(key);
             if (!hasKey) {
-                List<String> collect = session.getRelationSkus().stream().map(item -> item.getSkuId().toString()).collect(Collectors.toList());
+                List<String> collect = session.getRelationSkus().stream().map(item -> item.getPromotionId() + "_" + item.getSkuId().toString()).collect(Collectors.toList());
                 // 缓存活动进redis
                 redisTemplate.opsForList().leftPushAll(key, collect);
             }
@@ -79,7 +79,7 @@ public class SeckillServiceImpl implements SeckillService {
             BoundHashOperations<String, Object, Object> ops = redisTemplate.boundHashOps(SKUKILL_CACHE_PREFIX);
             String token = UUID.randomUUID().toString().replace("-", "");
             session.getRelationSkus().stream().forEach(seckillSkuVo -> {
-                if (ops.hasKey(seckillSkuVo.getSkuId().toString())) {
+                if (!ops.hasKey(seckillSkuVo.getPromotionSessionId() + "_" + seckillSkuVo.getSkuId().toString())) {
                     // 缓存商品
                     SeckillSkuRedisTo redisTo = new SeckillSkuRedisTo();
                     // 1. sku的基本数据
@@ -99,7 +99,7 @@ public class SeckillServiceImpl implements SeckillService {
                     // 4. 给秒杀商品设置随机码
                     redisTo.setRandomCode(token);
                     String jsonString = JSON.toJSONString(redisTo);
-                    ops.put(seckillSkuVo.getSkuId().toString(), jsonString);
+                    ops.put(seckillSkuVo.getPromotionSessionId().toString() + "_" + seckillSkuVo.getSkuId().toString(), jsonString);
                     // 5. 使用库存作为分布式的信号量，限流
                     RSemaphore semaphore = redissonClient.getSemaphore(SKU_STOCK_SEMAPHORE + token);
                     // 商品可以秒杀的数量作为信号量
