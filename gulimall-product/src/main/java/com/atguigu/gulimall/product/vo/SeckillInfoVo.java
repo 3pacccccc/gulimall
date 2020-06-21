@@ -1,13 +1,12 @@
-package com.atguigu.gulimall.seckill.to;
-
-
-import com.atguigu.gulimall.seckill.vo.SkuInfoVo;
-import lombok.Data;
+package com.atguigu.gulimall.product.vo;
 
 import java.math.BigDecimal;
 
-@Data
-public class SeckillSkuRedisTo {
+/**
+ * @author: maruimin
+ * @date: 2020/6/21 12:16
+ */
+public class SeckillInfoVo {
 
     private Long id;
     /**
@@ -33,13 +32,12 @@ public class SeckillSkuRedisTo {
     /**
      * 每人限购数量
      */
-    private Integer seckillLimit;
+    private BigDecimal seckillLimit;
     /**
      * 排序
      */
     private Integer seckillSort;
 
-    private SkuInfoVo skuInfo;
 
     /**
      * 当前商品秒杀的开始时间
