@@ -2,9 +2,9 @@ package com.atguigu.gulimall.ware.service.impl;
 
 import com.alibaba.fastjson.TypeReference;
 import com.atguigu.common.exception.NoStockException;
-import com.atguigu.common.mq.OrderTo;
-import com.atguigu.common.mq.StockDetailTo;
-import com.atguigu.common.mq.StockLockedTo;
+import com.atguigu.common.to.mq.OrderTo;
+import com.atguigu.common.to.mq.StockDetailTo;
+import com.atguigu.common.to.mq.StockLockedTo;
 import com.atguigu.common.utils.PageUtils;
 import com.atguigu.common.utils.Query;
 import com.atguigu.common.utils.R;

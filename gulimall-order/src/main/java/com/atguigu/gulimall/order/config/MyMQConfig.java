@@ -62,6 +62,21 @@ public class MyMQConfig {
                 null);
     }
 
+    @Bean
+    public Queue orderSeckillOrderQueue() {
+        return new Queue("order.seckill.order.queue", true, false, false, null);
+    }
+
+    @Bean
+    public Binding orderSeckillOrderQueueBinding() {
+        return new Binding("order.seckill.order.queue",
+                Binding.DestinationType.QUEUE,
+                "order-event-exchange",
+                "order.seckill.order",
+                null
+        );
+    }
+
     @RabbitListener(queues = "order.release.order.queue")
     public void handle1(Message message) {
 

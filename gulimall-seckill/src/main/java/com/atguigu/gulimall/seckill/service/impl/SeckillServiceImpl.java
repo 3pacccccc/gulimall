@@ -2,6 +2,7 @@ package com.atguigu.gulimall.seckill.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.atguigu.common.to.mq.SeckillOrderTo;
 import com.atguigu.common.utils.R;
 import com.atguigu.common.vo.MemberRespVo;
 import com.atguigu.gulimall.seckill.feign.CouponFeignService;
@@ -14,6 +15,7 @@ import com.atguigu.gulimall.seckill.vo.SkuInfoVo;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import org.redisson.api.RSemaphore;
 import org.redisson.api.RedissonClient;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.BoundHashOperations;
@@ -41,6 +43,9 @@ public class SeckillServiceImpl implements SeckillService {
 
     @Autowired
     RedissonClient redissonClient;
+
+    @Autowired
+    RabbitTemplate rabbitTemplate;
 
     private final String SESSIONS_CACHE_PREFIX = "seckill:sessions:";
 
@@ -154,13 +159,20 @@ public class SeckillServiceImpl implements SeckillService {
                         if (aBoolean) {
                             // 占位成功，说明该用户从来没有买过
                             RSemaphore semaphore = redissonClient.getSemaphore(SKU_STOCK_SEMAPHORE + randomCode);
-                            try {
-                                boolean b = semaphore.tryAcquire(num, 100, TimeUnit.MILLISECONDS);
+                            boolean b = semaphore.tryAcquire(num);
+                            if (b) {
                                 // 秒杀成功
                                 // 快速下单，发送MQ消息，10ms
-                                return IdWorker.getTimeId();
-                            } catch (InterruptedException e) {
-                                return null;
+                                String timeId = IdWorker.getTimeId();
+                                SeckillOrderTo orderTo = new SeckillOrderTo();
+                                orderTo.setOrderSn(timeId);
+                                orderTo.setMemberId(respVo.getId());
+                                orderTo.setNum(num);
+                                orderTo.setPromotionSessionId(redis.getPromotionSessionId());
+                                orderTo.setSkuId(redis.getSkuId());
+                                orderTo.setSeckillPrice(redis.getSeckillPrice());
+                                rabbitTemplate.convertAndSend("order-event-exchange", "order.seckill.order", orderTo);
+                                return timeId;
                             }
                         }
                     }

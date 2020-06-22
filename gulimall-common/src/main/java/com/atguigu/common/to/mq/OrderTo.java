@@ -1,4 +1,4 @@
-package com.atguigu.common.mq;
+package com.atguigu.common.to.mq;
 
 import lombok.Data;
 

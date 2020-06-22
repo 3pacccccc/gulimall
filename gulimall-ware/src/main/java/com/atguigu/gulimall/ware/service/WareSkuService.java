@@ -1,8 +1,7 @@
 package com.atguigu.gulimall.ware.service;
 
-import com.atguigu.common.mq.OrderTo;
-import com.atguigu.common.mq.StockLockedTo;
-import com.atguigu.gulimall.ware.vo.LockStockResult;
+import com.atguigu.common.to.mq.OrderTo;
+import com.atguigu.common.to.mq.StockLockedTo;
 import com.atguigu.gulimall.ware.vo.SkuHasStockVo;
 import com.atguigu.gulimall.ware.vo.WareSkuLockVo;
 import com.baomidou.mybatisplus.extension.service.IService;

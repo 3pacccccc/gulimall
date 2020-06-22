@@ -1,7 +1,7 @@
 package com.atguigu.gulimall.ware.listener;
 
-import com.atguigu.common.mq.OrderTo;
-import com.atguigu.common.mq.StockLockedTo;
+import com.atguigu.common.to.mq.OrderTo;
+import com.atguigu.common.to.mq.StockLockedTo;
 import com.atguigu.gulimall.ware.service.WareOrderTaskDetailService;
 import com.atguigu.gulimall.ware.service.WareOrderTaskService;
 import com.atguigu.gulimall.ware.service.WareSkuService;
