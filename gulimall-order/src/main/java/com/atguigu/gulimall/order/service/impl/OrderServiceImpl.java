@@ -95,7 +95,11 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     public OrderConfirmVo confirmOrder() throws ExecutionException, InterruptedException {
         OrderConfirmVo confirmVo = new OrderConfirmVo();
         MemberRespVo memberRespVo = LoginUserInterceptor.loginUser.get();
-
+        /**
+         * 这里的requestAttributes是放在threadLocal里面的，所以在CompletableFuture异步编排的时候，
+         * 只有一个线程里面有requestAttributes，其他线程的为null。所以需要在在每个线程里面都设置
+         * RequestContextHolder.setRequestAttributes(requestAttributes);
+         */
         RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
 
         CompletableFuture<Void> getAddressFuture = CompletableFuture.runAsync(() -> {
