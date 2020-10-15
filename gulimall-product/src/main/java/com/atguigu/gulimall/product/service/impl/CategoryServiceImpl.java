@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 
@@ -100,6 +101,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
     // 可以通过-Dio.netty.maxDirectMemory进行设置
     // 3).解决方案：不能使用-Dio.netty.maxDirectMemory只去调大堆外内存
     // ①. 升级lettuce客户端，②. 切换使用jedis
+    // 无论使用lettuce还是jedis(都是操作redis的底层客户端)，操作redisTemplate(经过封装的客户端)都是一样的操作
 
     /**
      * 1.每一个需要缓存的数据我们都来指定要放到那个名字的缓存。【缓存的分区(按照业务类型划分)】
@@ -280,6 +282,5 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         }).collect(Collectors.toList());
         return children;
     }
-
 
 }
