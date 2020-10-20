@@ -20,6 +20,10 @@ public class GuliFeignConfig {
 
     @Bean("requestInterceptor")
     public RequestInterceptor requestInterceptor() {
+        /**
+         * 给容器中放一个RequestInterceptor，feign在调用其他服务的时候，就会扫描容器中的所有RequestInterceptor组件的apply方法，增强
+         * request请求，我们这里在每一个请求中都加入原始请求的cookie请求头，防止出现请求头丢失问题！
+         */
         return new RequestInterceptor() {
             @Override
             public void apply(RequestTemplate template) {

@@ -46,6 +46,12 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
  *          4. 每个微服务，都必须导入registry.conf、file.conf文件到resources目录,并修改 file.conf里面的vgroup_mapping.{application-name}-fescar-service-group="default"
  *          5. 启动服务
  *          6. 给分布式大事务的入口标注@GlobalTransactional,其他服务还是标注@Transaactional
+ *          7.吹B材料:
+ *              这里使用的是seata的at模式(二阶段提交)，
+ *                  阶段1：业务数据和回滚日志记录在同一个本地事物中提交，释放本地锁和连接资源。
+ *                  阶段2：
+ *                      提交异步化，非常快速地完成。
+ *                      回滚通过一阶段的回滚日志进行反向补偿
  */
 
 @EnableAspectJAutoProxy(exposeProxy = true)
