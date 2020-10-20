@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.ToString;
 
 import java.io.Serializable;
+import java.security.PublicKey;
 import java.util.Date;
 
 /**

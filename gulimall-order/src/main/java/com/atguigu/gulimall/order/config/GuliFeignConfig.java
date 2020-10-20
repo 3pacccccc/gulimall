@@ -2,6 +2,7 @@ package com.atguigu.gulimall.order.config;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
+import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.context.request.RequestContextHolder;
